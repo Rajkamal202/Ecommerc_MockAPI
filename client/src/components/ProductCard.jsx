@@ -1,4 +1,3 @@
-// client/src/components/ProductCard.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
@@ -9,11 +8,15 @@ const ProductCard = ({ product }) => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105">
       <Link to={`/product/${product.id}`}>
-        <img src={product.image} alt={product.title} className="w-full h-48 object-cover" />
+        <img 
+          src={product.image} 
+          alt={product.title} 
+          className="w-full h-48 object-contain p-4"
+        />
       </Link>
       <div className="p-4">
         <Link to={`/product/${product.id}`}>
-          <h3 className="text-lg font-semibold mb-2 hover:text-blue-600 transition duration-300">{product.title}</h3>
+          <h3 className="text-lg font-semibold mb-2 hover:text-blue-600 transition duration-300 line-clamp-2">{product.title}</h3>
         </Link>
         <p className="text-gray-600 mb-2">${product.price.toFixed(2)}</p>
         <div className="flex justify-between items-center">

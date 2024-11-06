@@ -1,14 +1,15 @@
-// client/src/pages/ProductDetailPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useCart } from '../hooks/useCart';
 import { Star, ShoppingCart, CreditCard } from 'lucide-react';
 
 const ProductDetailPage = () => {
   const [product, setProduct] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { id } = useParams();
+  const navigate = useNavigate();
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -16,10 +17,11 @@ const ProductDetailPage = () => {
       try {
         const response = await axios.get(`https://fakestoreapi.com/products/${id}`);
         setProduct(response.data);
-      } catch (error) {
-        console.error('Error fetching product:', error);
-      } finally {
-        setIsLoading(false);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        setError('Failed to load product details. Please try again later.');
+        setLoading(false);
       }
     };
 
@@ -27,42 +29,84 @@ const ProductDetailPage = () => {
   }, [id]);
 
   const handleAddToCart = () => {
-    addToCart(product);
+    if (product) {
+      addToCart(product);
+    }
   };
 
   const handleBuyNow = () => {
-    addToCart(product);
-    // Navigate to checkout page
-    window.location.href = '/checkout';
+    if (product) {
+      addToCart(product);
+      navigate('/checkout');
+    }
   };
 
-  if (isLoading) {
-    return <div className="container mx-auto px-6 py-8 text-center">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
   }
 
-  if (!product) {
-    return <div className="container mx-auto px-6 py-8 text-center">Product not found</div>;
+  if (error || !product) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center text-red-600">
+          {error || 'Product not found'}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto px-6 py-8">
-      <div className="flex flex-col md:flex-row">
-        <div className="md:w-1/2 mb-8 md:mb-0">
-          <img src={product.image} alt={product.title} className="w-full h-auto object-contain rounded-lg shadow-lg" />
+    <div className="container mx-auto px-4 py-8" data-scroll-section>
+      <div className="flex flex-col md:flex-row gap-8">
+        {/* Product Image */}
+        <div className="md:w-1/2">
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <img
+              src={product.image}
+              alt={product.title}
+              className="w-full h-[400px] object-contain"
+            />
+          </div>
         </div>
-        <div className="md:w-1/2 md:pl-8">
+
+        {/* Product Details */}
+        <div className="md:w-1/2">
           <h1 className="text-3xl font-bold mb-4">{product.title}</h1>
+          
+          {/* Rating */}
           <div className="flex items-center mb-4">
-            <div className="flex text-yellow-400 mr-2">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} fill={i < Math.round(product.rating.rate) ? "currentColor" : "none"} />
+            <div className="flex text-yellow-400">
+              {[...Array(5)].map((_, index) => (
+                <Star
+                  key={index}
+                  className={index < Math.round(product.rating?.rate || 0) ? 'fill-current' : ''}
+                  size={20}
+                />
               ))}
             </div>
-            <span className="text-gray-600">({product.rating.count} reviews)</span>
+            <span className="ml-2 text-gray-600">
+              ({product.rating?.count || 0} reviews)
+            </span>
           </div>
-          <p className="text-2xl font-semibold mb-4">${product.price.toFixed(2)}</p>
-          <p className="text-gray-700 mb-6">{product.description}</p>
-          <div className="flex space-x-4 mb-6">
+
+          {/* Price */}
+          <div className="text-3xl font-bold mb-4">
+            ${product.price?.toFixed(2)}
+          </div>
+
+          {/* Description */}
+          <p className="text-gray-600 mb-6">
+            {product.description}
+          </p>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <button
               onClick={handleAddToCart}
               className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
@@ -76,17 +120,22 @@ const ProductDetailPage = () => {
             >
               <CreditCard className="mr-2" size={20} />
               Buy Now
-            
             </button>
           </div>
+
+          {/* Product Information */}
           <div className="border-t pt-6">
-            <h2 className="text-xl font-semibold mb-2">Product Details</h2>
-            <ul className="list-disc list-inside text-gray-700">
-              <li>Category: {product.category}</li>
-              <li>Material: Premium Quality</li>
-              <li>Shipping: Free</li>
-              <li>Returns: 30-day money-back guarantee</li>
-            </ul>
+            <h2 className="text-xl font-semibold mb-4">Product Information</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-gray-600">Category</p>
+                <p className="font-semibold capitalize">{product.category}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Availability</p>
+                <p className="font-semibold text-green-600">In Stock</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

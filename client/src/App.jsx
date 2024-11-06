@@ -1,34 +1,56 @@
-// client/src/App.jsx
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useRef, useEffect } from 'react';
+import { BrowserRouter as Router, useLocation } from 'react-router-dom';
+import { LocomotiveScrollProvider } from 'react-locomotive-scroll';
 import { CartProvider } from './context/CartContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import HomePage from './pages/HomePage';
-import ProductListingPage from './pages/ProductListingPage';
-import ProductDetailPage from './pages/ProductDetailPage';
-import CheckoutPage from './pages/CheckoutPage';
-import PaymentResultPage from './pages/PaymentResultPage';
-import AboutPage from './pages/AboutPage';
+import Routes from './Routes';
+import 'locomotive-scroll/dist/locomotive-scroll.css';
+
+const ScrollWrapper = ({ children }) => {
+  const { pathname } = useLocation();
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTo(0, 0);
+    }
+  }, [pathname]);
+
+  return (
+    <LocomotiveScrollProvider
+      options={{
+        smooth: true,
+        multiplier: 1,
+        class: 'is-revealed',
+        smartphone: {
+          smooth: true
+        },
+        tablet: {
+          smooth: true
+        }
+      }}
+      containerRef={containerRef}
+      watch={[pathname]}
+    >
+      <div data-scroll-container ref={containerRef}>
+        {children}
+      </div>
+    </LocomotiveScrollProvider>
+  );
+};
 
 function App() {
   return (
     <CartProvider>
       <Router>
-        <div className="flex flex-col min-h-screen">
+        <ScrollWrapper>
           <Header />
           <main className="flex-grow bg-gray-100">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/products" element={<ProductListingPage />} />
-              <Route path="/product/:id" element={<ProductDetailPage />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/payment-result/:result" element={<PaymentResultPage />} />
-              <Route path="/about" element={<AboutPage />} />
-            </Routes>
+            <Routes />
           </main>
           <Footer />
-        </div>
+        </ScrollWrapper>
       </Router>
     </CartProvider>
   );
